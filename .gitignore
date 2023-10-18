@@ -3,10 +3,12 @@
 /build/
 /CMakeFiles/
 .idea/
+.vs/
 compile_commands.json
 cmake_install.cmake
 .ycm_extra_conf.py
 /io/
 /logs/
+/out/
 results.txt
 .clangd/
