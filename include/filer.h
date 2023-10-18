@@ -23,6 +23,7 @@ class Filer{
 		int WriteMessage(json message, std::string path);
 		json ReadMessages(int player_number);
 		bool ArePlayersReady();
+		void InitReadyFile(std::string file_path, int num_players);
 
 		void StartLog(int log_id);
 		void WriteLog(int era, int turn, int player_id, std::vector<DMAG::Card> hand_cards, std::string action, std::string card);

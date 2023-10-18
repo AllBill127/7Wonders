@@ -26,11 +26,32 @@ int Filer::Init(int player_count){
  */
 
 int Filer::WriteMessage(json message, std::string path){
-	// out_file.open("./io/game_status.json");
-	out_file.open(path);
+	 //out_file.open("./io/game_status.json");
+	/*out_file.open(path);
+	std::cout << "=== rasome game statusa ===" << std::endl;
 	out_file  << message << std::endl;
+	std::cout << "=== game statusas parasytas ===" << std::endl;
 	out_file.close();
-	return 0;
+	return 0;*/
+
+	try {
+		std::ofstream out_file(path);
+		if (out_file.is_open()) {
+			// File opened successfully, proceed to write data
+			;
+			std::cout << "=== rasome game statusa ===" << std::endl;
+			out_file << message << std::endl;
+			std::cout << "=== game statusas parasytas ===" << std::endl;
+			out_file.close();
+			return 0;
+		}
+		else {
+			std::cerr << "Failed to open the file for writing." << std::endl;
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "An exception occurred: " << e.what() << std::endl;
+	}
 }
 
 json Filer::ReadMessages(int player_number){
@@ -62,6 +83,16 @@ bool Filer::ArePlayersReady(){
 	std::ofstream clear_ready("./io/ready.txt", std::ofstream::out | std::ofstream::trunc);
 	clear_ready.close();
 	return true;
+}
+
+void Filer::InitReadyFile(std::string file_path, int num_players) {
+	std::ofstream new_file(file_path, std::ofstream::out);
+
+	//for (int i = 0; i < num_players; i++) {
+	//	new_file << "\n";  // Insert newlines
+	//}
+
+	new_file.close();
 }
 
 void Filer::StartLog(int log_id){

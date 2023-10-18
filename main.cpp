@@ -13,6 +13,7 @@
 #include <filer.h>
 #include <algorithm>
 #include <nlohmann/json.hpp>
+#include <random>
 
 #define NUM_PLAYERS 3
 
@@ -160,7 +161,7 @@ class Game{
             vector<Card> cards;
             int card_idx = 0;
 
-            random_shuffle(deck[era-1].begin(), deck[era-1].end());
+            shuffle(deck[era-1].begin(), deck[era-1].end(), default_random_engine());
 
             for (Player* & player : player_list) {
                 cards.clear();
@@ -317,7 +318,7 @@ class Game{
 
             // add guild cards to deck (5 cards to 3 players, 6 cards to 4 players, ...)
             srand(time(0));
-            random_shuffle(guild_cards.begin(), guild_cards.end());
+            shuffle(guild_cards.begin(), guild_cards.end(), default_random_engine());
             for (int i = 0; i < this->number_of_players + 2; i++) {
                 deck[2].push_back(guild_cards[i]);
             }
@@ -354,6 +355,10 @@ class Game{
         void Init(){
             CreateWonders();
             fp.Init(NUM_PLAYERS);
+        }
+
+        void InitReadyFile() {
+            fp.InitReadyFile("./io/ready.txt", NUM_PLAYERS);
         }
 
         void Close(){
@@ -461,7 +466,9 @@ class Game{
                 status["players"][to_string(i)]["amount"]["manufactured_goods"] = player_list[i]->CalculateAmountManufacturedGood();
             }
 
+            cout << "=== atnaujinam game statusa ===" << endl;
             fp.WriteMessage(status, "./io/game_status.json");
+            cout << "=== game statusas atnaujintas ===" << endl;
         }
 
         void Loop(){
@@ -605,6 +612,9 @@ int main(int argc, char **argv)
 
     g.Init();
     g.NewGame(NUM_PLAYERS);
+
+    // initiate a ready.txt file with player number of lines
+    g.InitReadyFile();
 
     //    g.NextTurn(p, 0); //this function is not completed
     g.Loop();
