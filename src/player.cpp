@@ -300,6 +300,19 @@ std::vector<Card> Player::GetPlayableCards(){
             this->cards_playable.push_back(c);
         }
         // Check if you can potentially play the card.
+        // TODO:    optional trading mechanism.
+        //          return a "tradeable_cards": 
+        //              [
+        //                  "tradeable_card": {
+        //                      "card_name": string name, 
+        //                      "left_neighbour_price": int coin_price/null, 
+        //                      "right_neighbour_price": int coin_price/null
+        //                  }, 
+        //                  "tradeable_card": {
+        //                      ...
+        //                  }, 
+        //                  ...
+        //              ] 
         else {
             std::map<int, int> resources_needed = c.MissingCards(this->resources);
             for (std::map<int, int>::iterator it = resources_needed.begin();

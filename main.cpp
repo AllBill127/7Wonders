@@ -386,6 +386,22 @@ class Game{
             status["game"]["era"] = era;
             status["game"]["turn"] = turn;
             status["game"]["clockwise"] = (era == 1 || era == 3);
+            // TODO:    provide discard_pile for Halikarnassos wonder.
+            //          discard_pile should only contain cards discarded for money using "discard" subcommand
+            //          but should include cards discarded on the turn that the stage of Halikarnassos is build.
+            //
+            // NOTE:    assuming that AI bot can only make correct moves, the AI bot app should add discarded cards localy every turn 
+            //          and check if Halikarnassos is built. If Halikarnassos stage is appropriate 
+            //          choose exrta card from appended discard pile.
+            // NOTE/TODO:   player command with extra argument should be processe last from all player commands
+            //              so all discarded cards are added to the pile ( GameLoop() ).
+            /* IN PROGRESS */
+            // discarded cards before the current turn
+            cards = discard_pile;
+            card_names.clear();
+            for (DMAG::Card c : cards)
+                card_names.push_back(c.GetName());
+            status["game"]["discarded_cards"] = card_names;
 
             for (int i = 0; i < number_of_players; i++) {
                 wonder = player_list[i]->GetBoard();
@@ -408,8 +424,6 @@ class Game{
                 for(DMAG::Card c: cards)
                     card_ids.push_back(c.GetId());
                 status["players"][to_string(i)]["cards_hand_id"] = card_ids;
-
-
 
                 // played cards
                 cards = player_list[i]->GetPlayedCards();
@@ -511,6 +525,12 @@ class Game{
                     // just skip the turn (i.e. don't do anything).
                     if (this->turn == 6 || this->turn == 13 || this->turn == 20) {
                         if (!player_list[i]->PlaySeventh()) continue;
+                        // TODO:
+                        //          else player can play seventh so we need to play his card,
+                        //          then calculate his new playable cards,
+                        //          then post new game_status with unchanged turn,
+                        //          wait for players ready,
+                        //          then read i-th player command and process it
                     }
 
                     Card card_played = GetCardByName(argument);
