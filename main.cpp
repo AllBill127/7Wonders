@@ -100,8 +100,27 @@ class Game{
          */
         void NextTurn(){
 
-            // TODO: check if the player has the wonder effects that make
+            // TODO (COMPLETED): check if the player has the wonder effects that make
             // possible to play another card in the same round and do it
+            // 
+            //      check if CanPlaySeventh() = true and run gameLoop for one player
+            /* IN PROGRESS */
+
+            // Turns 6 13 and 20 -> last card in hand card.
+                    // If the player does have the ability to play the seventh card,
+                    // call extra game loop for 1 player.
+            if (this->turn == 6 || this->turn == 13 || this->turn == 20) {
+                for (int i = 0; i < number_of_players; i++) {
+                    if (player_list[i]->PlaySeventh())
+                    // TODO (COMPLETED):
+                    //          else player can play seventh so we need to play his card,
+                    //          then calculate his new playable cards,
+                    //          then post new game_status with unchanged turn,
+                    //          wait for players ready,
+                    //          then read i-th player command and process it
+                        ExtraTurnLoop(player_list[i]);
+                }
+            }
 
             turn++;
 
@@ -151,6 +170,94 @@ class Game{
                     //cout << "Passou" << endl;
                 } while (p1 != player);
                 //cout << "Passou tudo" << endl;
+            }
+        }
+
+        void ExtraTurnLoop(DMAG::Player* player) {
+            json json_object;
+            std::string command, argument, extra;
+            std::vector<DMAG::Card> hand_cards_bkp;
+            // fp.StartLog(time(0));
+
+            WriteGameStatus();
+
+            cout << "\n:::EXTRA TURN " << (short)this->turn << ":::" << endl;
+
+            // Print Playable Cards for each player.
+            cout << "> Playable cards for player " << player->GetId() << ":" << endl;
+            for (DMAG::Card const& card : player->GetPlayableCards()) {
+                cout << "  (" << player->GetId() << ") " << card.GetName() << endl;
+            }
+            if (player->CanBuildWonder()) {
+                cout << "> Player " << player->GetId() << " CAN build a wonder stage! " << endl;
+            }
+            else cout << "> Player " << player->GetId() << " CANNOT build a wonder stage! " << endl;
+
+            // Await AI bot response by filling all player ready status !!!
+            cout << "<Waiting players...>" << endl;
+            while (!fp.ArePlayersReady());
+
+            json_object = fp.ReadMessages(player->GetId());
+            // handle command inside json_object
+            command = json_object["command"]["subcommand"];
+            argument = json_object["command"]["argument"];
+
+            // Only the player with Halikarnassos will have something written on extra.
+            extra = json_object["command"]["extra"];
+
+            // Process command
+            Card card_played = GetCardByName(argument);
+            hand_cards_bkp = player->GetHandCards();
+
+            if (command == "build_structure") {
+                if (player->BuildStructure(card_played, player->GetHandCards(), false)) {
+                    cout << "<BuildStructure OK>" << endl;
+                }
+                else {
+                    cout << "<BuildStructure NOK>" << endl;
+                    command = "discard";
+                }
+
+            }
+            else if (command == "build_hand_free") {
+                if (player->BuildHandFree(card_played)) {
+                    cout << "<BuildHandFree OK>" << endl;
+                }
+                else {
+                    cout << "<BuildHandFree NOK>" << endl;
+                    command = "discard";
+                }
+
+            }
+            else if (command == "build_wonder") {
+                if (player->BuildWonder(card_played)) {
+                    cout << "<BuildWonder OK>" << endl;
+                }
+                else {
+                    cout << "<BuildWonder NOK>" << endl;
+                    command = "discard";
+                }
+            }
+
+            if (command == "discard") {
+                player->Discard(card_played); //Gives player 3 coins.
+                cout << "<Discard OK>" << endl;
+                discard_pile.push_back(card_played);
+            }
+
+            // fp.WriteLog(era, turn, player_list[i]->GetId(), hand_cards_bkp, command, argument);
+            
+            // VERY IMPORTANT: call player->ResetUsed() for each player at the end of a turn!
+            for (int i = 0; i < player_list.size(); i++) {
+                player_list[i]->ResetUsed();
+                // If extra is not empty, try to build a card from the discard pile for free.
+                // (will only work if the player has the required stage for Halikarnassos)
+                if (!extra.empty()) {
+                    Card c = GetCardByName(extra);
+                    if (player_list[i]->BuildDiscardFree(c, discard_pile)) {
+                        cout << "<BuildDiscardFree OK>" << endl;
+                    }
+                }
             }
         }
 
@@ -386,15 +493,18 @@ class Game{
             status["game"]["era"] = era;
             status["game"]["turn"] = turn;
             status["game"]["clockwise"] = (era == 1 || era == 3);
-            // TODO:    provide discard_pile for Halikarnassos wonder.
+            // TODO (COMPLETED):    
+            //          provide discard_pile for Halikarnassos wonder.
             //          discard_pile should only contain cards discarded for money using "discard" subcommand
             //          but should include cards discarded on the turn that the stage of Halikarnassos is build.
             //
             // NOTE:    assuming that AI bot can only make correct moves, the AI bot app should add discarded cards localy every turn 
             //          and check if Halikarnassos is built. If Halikarnassos stage is appropriate 
             //          choose exrta card from appended discard pile.
-            // NOTE/TODO:   player command with extra argument should be processe last from all player commands
-            //              so all discarded cards are added to the pile ( GameLoop() ).
+            // 
+            // NOTE:    player command with extra argument should be (AND IS!) processed at the end of all player commands
+            //              so all discarded cards are added to the pile (no changes needed).
+            //
             /* IN PROGRESS */
             // discarded cards before the current turn
             cards = discard_pile;
@@ -525,12 +635,6 @@ class Game{
                     // just skip the turn (i.e. don't do anything).
                     if (this->turn == 6 || this->turn == 13 || this->turn == 20) {
                         if (!player_list[i]->PlaySeventh()) continue;
-                        // TODO:
-                        //          else player can play seventh so we need to play his card,
-                        //          then calculate his new playable cards,
-                        //          then post new game_status with unchanged turn,
-                        //          wait for players ready,
-                        //          then read i-th player command and process it
                     }
 
                     Card card_played = GetCardByName(argument);
