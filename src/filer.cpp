@@ -35,7 +35,7 @@ int Filer::WriteMessage(json message, std::string path){
 	return 0;*/
 
 	try {
-		std::ofstream out_file(path);
+		out_file.open(path);
 		if (out_file.is_open()) {
 			// File opened successfully, proceed to write data
 			;
@@ -47,6 +47,7 @@ int Filer::WriteMessage(json message, std::string path){
 		}
 		else {
 			std::cerr << "Failed to open the file for writing." << std::endl;
+			std::cerr << "File: " + path << std::endl;
 		}
 	}
 	catch (const std::exception& e) {
