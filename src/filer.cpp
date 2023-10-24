@@ -132,7 +132,8 @@ void Filer::WriteLog(int era, int turn, int player_id, std::vector<DMAG::Card> h
 	log_file.close();
 }
 
-void Filer::WriteMatchLog(std::vector<DMAG::Player*> player_list, int log_id) {
+// old WriteMatchLog() implementation that was hardcoded to log 3 players
+/*void Filer::WriteMatchLog(std::vector<DMAG::Player*> player_list, int log_id) {
 	char file[64];
 	sprintf(file, "../logs/7w_match_%d.csv", log_id);
 	log_file_path = file;
@@ -235,6 +236,94 @@ void Filer::WriteMatchLog(std::vector<DMAG::Player*> player_list, int log_id) {
 
 	// shields
 	log_file << "Shields" << "," << rs_player_1[RESOURCE::shields] << "," << rs_player_2[RESOURCE::shields] << "," << rs_player_3[RESOURCE::shields] << "\n";
+
+	log_file.close();
+}*/
+
+void Filer::WriteMatchLog(std::vector<DMAG::Player*> player_list, int log_id) {
+	char file[64];
+	sprintf(file, "../logs/7w_match_%d.csv", log_id);
+	log_file_path = file;
+
+	log_file.open(log_file_path, std::ofstream::out);
+
+	if (player_list.empty()) {
+		log_file.close();
+		return;  // No players to log, so exit early
+	}
+
+	log_file << " ";
+	for (const auto& player : player_list) {
+		log_file << "," << "player_" << player->GetId();
+	}
+	log_file << "\n";
+
+	log_file << "Victory Points";
+	for (const auto& player : player_list) {
+		log_file << "," << player->CalculateScore();
+	}
+	log_file << "\n";
+
+	log_file << "Victory Points";
+	for (const auto& player : player_list) {
+		log_file << "," << player->CalculateCivilianScore();
+	}
+	log_file << "\n";
+
+	log_file << "Victory Points";
+	for (const auto& player : player_list) {
+		log_file << "," << player->CalculateCommercialScore();
+	}
+	log_file << "\n";
+
+	log_file << "Victory Points";
+	for (const auto& player : player_list) {
+		log_file << "," << player->CalculateGuildScore();
+	}
+	log_file << "\n";
+
+	log_file << "Victory Points";
+	for (const auto& player : player_list) {
+		log_file << "," << player->CalculateMilitaryScore();
+	}
+	log_file << "\n";
+
+	log_file << "Victory Points";
+	for (const auto& player : player_list) {
+		log_file << "," << player->CalculateScientificScore();
+	}
+	log_file << "\n";
+
+	log_file << "Victory Points";
+	for (const auto& player : player_list) {
+		log_file << "," << player->CalculateWonderScore();
+	}
+	log_file << "\n";
+
+
+	// print resources
+	std::unordered_map<int, std::string> resourceNames = {
+		{RESOURCE::wood, "Wood"},
+		{RESOURCE::ore, "Ore"},
+		{RESOURCE::clay, "Clay"},
+		{RESOURCE::stone, "Stone"},
+		{RESOURCE::loom, "Loom"},
+		{RESOURCE::glass, "Glass"},
+		{RESOURCE::papyrus, "Papyrus"},
+		{RESOURCE::gear, "Gear"},
+		{RESOURCE::compass, "Compass"},
+		{RESOURCE::tablet, "Tablet"},
+		{RESOURCE::coins, "Clay"},
+		{RESOURCE::shields, "Shields"}
+	};
+
+	for (const auto& resourceEntry : resourceNames) {
+		log_file << resourceEntry.second;  // Use the string representation
+		for (const auto& player : player_list) {
+			log_file << "," << player->GetResources()[resourceEntry.first];
+		}
+		log_file << "\n";
+	}
 
 	log_file.close();
 }
