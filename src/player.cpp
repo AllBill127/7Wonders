@@ -240,8 +240,7 @@ bool Player::BuildStructure(DMAG::Card c, std::vector<DMAG::Card>& cards, bool f
             break;
     }
 
-    //cards_hand.erase(cards_hand.begin()+i);
-    cards.erase(cards.begin() + i); //when cards passed as ref using type&
+    cards.erase(cards.begin() + i);
     cards_played.push_back(c);
 
     if (!free_card) this->resources[RESOURCE::coins] -= cost;
