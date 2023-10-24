@@ -15,7 +15,7 @@
 #include <nlohmann/json.hpp>
 #include <random>
 
-#define NUM_PLAYERS 3
+#define NUM_PLAYERS 7
 
 using json = nlohmann::json;
 
@@ -100,29 +100,30 @@ class Game{
          */
         void NextTurn(){
 
-            // TODO (COMPLETED): check if the player has the wonder effects that make
+            turn++;
+
+            // TODO (COMPLETED): check if the player has the wonder effects that makes
             // possible to play another card in the same round and do it
             // 
             //      check if CanPlaySeventh() = true and run gameLoop for one player
-            /* IN PROGRESS */
-
+            //
+            //
             // Turns 6 13 and 20 -> last card in hand card.
                     // If the player does have the ability to play the seventh card,
                     // call extra game loop for 1 player.
             if (this->turn == 6 || this->turn == 13 || this->turn == 20) {
                 for (int i = 0; i < number_of_players; i++) {
                     if (player_list[i]->PlaySeventh())
-                    // TODO (COMPLETED):
-                    //          else player can play seventh so we need to play his card,
-                    //          then calculate his new playable cards,
-                    //          then post new game_status with unchanged turn,
-                    //          wait for players ready,
-                    //          then read i-th player command and process it
+                        // TODO (COMPLETED):
+                        //          player can play seventh so we need to play his card,
+                        //          then calculate his new playable cards,
+                        //          then post new game_status with unchanged turn,
+                        //          wait for players ready,
+                        //          then read i-th player command and process it
                         ExtraTurnLoop(player_list[i]);
                 }
+                turn++;
             }
-
-            turn++;
 
             // if end of an era (turns 7 14 and 21)
             if (turn % 7 == 0) {
@@ -173,6 +174,10 @@ class Game{
             }
         }
 
+        /*
+         * Plays extra turn (6/13/20) for a player that has built
+         * Babylon B stage 2
+         */
         void ExtraTurnLoop(DMAG::Player* player) {
             json json_object;
             std::string command, argument, extra;
@@ -183,7 +188,7 @@ class Game{
 
             cout << "\n:::EXTRA TURN " << (short)this->turn << ":::" << endl;
 
-            // Print Playable Cards for each player.
+            // Print Playable Cards for a player.
             cout << "> Playable cards for player " << player->GetId() << ":" << endl;
             for (DMAG::Card const& card : player->GetPlayableCards()) {
                 cout << "  (" << player->GetId() << ") " << card.GetName() << endl;
@@ -210,7 +215,7 @@ class Game{
             hand_cards_bkp = player->GetHandCards();
 
             if (command == "build_structure") {
-                if (player->BuildStructure(card_played, player->GetHandCards(), false)) {
+                if (player->BuildStructure(card_played, player->GetHandCardsPointer(), false)) {
                     cout << "<BuildStructure OK>" << endl;
                 }
                 else {
@@ -256,6 +261,7 @@ class Game{
                     Card c = GetCardByName(extra);
                     if (player_list[i]->BuildDiscardFree(c, discard_pile)) {
                         cout << "<BuildDiscardFree OK>" << endl;
+                        extra = "";
                     }
                 }
             }
@@ -387,7 +393,7 @@ class Game{
             cards.push_back(Card(CARD_ID::archery_range, "Archery Range", CARD_TYPE::military, 2, CARD_ID::workshop, {2, 1, 0, 0, 0, 0, 0, 0}, {1, 1, 1, 2, 2}));
             cards.push_back(Card(CARD_ID::fortifications, "Fortifications", CARD_TYPE::military, 3, CARD_ID::walls, {0, 3, 0, 1, 0, 0, 0, 0}, {1, 1, 1, 1, 2}));
             cards.push_back(Card(CARD_ID::circus, "Circus", CARD_TYPE::military, 3, CARD_ID::training_ground, {0, 1, 0, 3, 0, 0, 0, 0}, {0, 1, 2, 3, 3}));
-            cards.push_back(Card(CARD_ID::arsenal, "Arsenal", CARD_TYPE::military, 3, CARD_ID::none, {2, 1, 0, 0, 1, 0, 0, 0}, {1, 1, 1, 1, 2}));
+            cards.push_back(Card(CARD_ID::arsenal, "Arsenal", CARD_TYPE::military, 3, CARD_ID::none, {2, 1, 0, 0, 1, 0, 0, 0}, {1, 2, 2, 2, 3}));
             cards.push_back(Card(CARD_ID::siege_workshop, "Siege Workshop", CARD_TYPE::military, 3, CARD_ID::laboratory, {1, 0, 3, 0, 0, 0, 0, 0}, {1, 1, 2, 2, 2}));
             // Scientific Structure
             cards.push_back(Card(CARD_ID::apothecary, "Apothecary", CARD_TYPE::scientific, 1, CARD_ID::none, {0, 0, 0, 0, 1, 0, 0, 0}, {1, 1, 2, 2, 2}));
@@ -505,7 +511,6 @@ class Game{
             // NOTE:    player command with extra argument should be (AND IS!) processed at the end of all player commands
             //              so all discarded cards are added to the pile (no changes needed).
             //
-            /* IN PROGRESS */
             // discarded cards before the current turn
             cards = discard_pile;
             card_names.clear();
@@ -597,7 +602,7 @@ class Game{
 
         void Loop(){
             json json_object;
-            std::string command, argument, extra;
+            std::string command, argument, extra, temp_extra;
             std::vector<DMAG::Card> hand_cards_bkp;
             // fp.StartLog(time(0));
 
@@ -628,7 +633,9 @@ class Game{
                     argument = json_object["command"]["argument"];
 
                     // Only the player with Halikarnassos will have something written on extra.
-                    extra = json_object["command"]["extra"];
+                    temp_extra = json_object["command"]["extra"];
+                    if(temp_extra != "")
+                        extra = temp_extra;
 
                     // Turns 6 13 and 20 -> last card in hand card.
                     // If the player doesn't have the ability to play the seventh card,
@@ -641,7 +648,7 @@ class Game{
                     hand_cards_bkp = player_list[i]->GetHandCards();
 
                     if (command == "build_structure"){
-                        if(player_list[i]->BuildStructure(card_played, player_list[i]->GetHandCards(), false)) {
+                        if(player_list[i]->BuildStructure(card_played, player_list[i]->GetHandCardsPointer(), false)) {
                             cout << "<BuildStructure OK>" << endl;
                         } else {
                             cout << "<BuildStructure NOK>" << endl;
@@ -684,6 +691,7 @@ class Game{
                         Card c = GetCardByName(extra);
                         if (player_list[i]->BuildDiscardFree(c, discard_pile)) {
                             cout << "<BuildDiscardFree OK>" << endl;
+                            extra = "";
                         }
                     }
                 }
