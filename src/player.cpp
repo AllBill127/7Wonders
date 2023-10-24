@@ -78,10 +78,8 @@ bool Player::CanBuildWonder() {
     return this->can_build_wonder;
 }
 
-// Play a card.
-// * arg cards is necessary for any special situation? it is equal to this->cards_hand
-// P: Yes, in case we want to build a free card from the discard pile.
-bool Player::BuildStructure(DMAG::Card c, std::vector<DMAG::Card> cards, bool free_card){
+// Play a card from a provided cards vector.
+bool Player::BuildStructure(DMAG::Card c, std::vector<DMAG::Card>& cards, bool free_card){
     // Returns false if the card has already been played (cannot play the same card twice).
     if (this->HasPlayedCard(c)) return false;
 
@@ -242,7 +240,8 @@ bool Player::BuildStructure(DMAG::Card c, std::vector<DMAG::Card> cards, bool fr
             break;
     }
 
-    cards_hand.erase(cards_hand.begin()+i);
+    //cards_hand.erase(cards_hand.begin()+i);
+    cards.erase(cards.begin() + i); //when cards passed as ref using type&
     cards_played.push_back(c);
 
     if (!free_card) this->resources[RESOURCE::coins] -= cost;
@@ -272,6 +271,10 @@ bool Player::CheckFreeCard(DMAG::Card c){
 }
 
 std::vector<Card> Player::GetHandCards(){
+    return this->cards_hand;
+}
+
+std::vector<Card>& Player::GetHandCardsPointer() {
     return this->cards_hand;
 }
 
@@ -1063,7 +1066,7 @@ void Player::CanBuyRawCheap(){
 // Builds a card from the discard pile for free.
 // - will be changed depending on which type discard_pile will be.
 // - called at the end of the turn after the stage was built.
-bool Player::BuildDiscardFree(DMAG::Card c, std::vector<DMAG::Card> discard_pile){
+bool Player::BuildDiscardFree(DMAG::Card c, std::vector<DMAG::Card>& discard_pile){
     int id = this->board->GetId();
     int stage = this->board->GetStage();
 
