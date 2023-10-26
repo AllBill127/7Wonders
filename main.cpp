@@ -596,7 +596,13 @@ class Game{
             }
 
             cout << "=== atnaujinam game statusa ===" << endl;
-            fp.WriteMessage(status, "./io/game_status.json");
+            int writeSuccess;
+            do {
+                writeSuccess = fp.WriteMessage(status, "./io/game_status.json");
+                if (writeSuccess != 0)
+                    cout << "FAILED WriteMessage | writeSuccess:" << writeSuccess << endl;
+            } while (writeSuccess != 0);
+
             cout << "=== game statusas atnaujintas ===" << endl;
         }
 

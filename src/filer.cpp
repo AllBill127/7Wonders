@@ -48,6 +48,7 @@ int Filer::WriteMessage(json message, std::string path){
 		else {
 			std::cerr << "Failed to open the file for writing." << std::endl;
 			std::cerr << "File: " + path << std::endl;
+			return -1;
 		}
 	}
 	catch (const std::exception& e) {
